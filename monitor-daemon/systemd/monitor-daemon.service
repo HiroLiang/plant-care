@@ -5,25 +5,27 @@ After=network.target
 [Service]
 Type=simple
 
-# Use python in venv
-ExecStart=/opt/plant-care/monitor-daemon/.venv/bin/python main.py
-
-# Define envs
-Environment=PYTHONPATH=src
-
-Environment=HTTP_HOST=0.0.0.0
-Environment=HTTP_PORT=8001
-
-Environment=SENSOR_BACKEND=mock
+User=hiro
+Group=hiro
 
 # Define working directory
-WorkingDirectory=/opt/plant-care/monitor-daemon
+WorkingDirectory=/home/hiro/plant-care/monitor-daemon
+
+# Use python in venv
+ExecStart=/home/hiro/plant-care/monitor-daemon/.venv/bin/python main.py
+
+# Define envs
+Environment=PYTHONPATH=/home/hiro/plant-care/monitor-daemon/src
+Environment=HTTP_HOST=0.0.0.0
+Environment=HTTP_PORT=8001
+Environment=SENSOR_BACKEND=sht31
 
 Restart=always
 RestartSec=5
 
 # systemd security
 NoNewPrivileges=true
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
