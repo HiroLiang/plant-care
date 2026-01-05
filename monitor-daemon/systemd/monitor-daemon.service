@@ -1,0 +1,29 @@
+[Unit]
+Description=Monitor Daemon (Temperature & Humidity)
+After=network.target
+
+[Service]
+Type=simple
+
+# Use python in venv
+ExecStart=/opt/plant-care/monitor-daemon/.venv/bin/python main.py
+
+# Define envs
+Environment=PYTHONPATH=src
+
+Environment=HTTP_HOST=0.0.0.0
+Environment=HTTP_PORT=8001
+
+Environment=SENSOR_BACKEND=mock
+
+# Define working directory
+WorkingDirectory=/opt/plant-care/monitor-daemon
+
+Restart=always
+RestartSec=5
+
+# systemd security
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
