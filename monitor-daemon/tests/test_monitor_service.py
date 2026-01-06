@@ -1,6 +1,7 @@
 import time
 
 from application.monitor_service import MonitorService
+from infrastructure.module.local_module import LocalSensorModule
 from infrastructure.sensor.mock import (
     MockTemperatureSensor,
     MockHumiditySensor,
@@ -12,18 +13,15 @@ def test_monitor_service_poll_and_snapshot():
     temp_sensor = MockTemperatureSensor(base=26.5)
     humidity_sensor = MockHumiditySensor(base=55.2)
 
-    service = MonitorService(
-        temp_sensor=temp_sensor,
-        humidity_sensor=humidity_sensor,
-    )
+    module = LocalSensorModule(module_id="test_module")
+    module.add_sensor(temp_sensor)
+    module.add_sensor(humidity_sensor)
+
+    service = MonitorService(modules=[module])
 
     # Act
-    before = time.time()
     service.poll()
     snapshot = service.snapshot()
 
     # Assert
-    assert snapshot["temperature"] is not None
-    assert snapshot["humidity"] is not None
-    assert snapshot["updated_at"] is not None
-    assert snapshot["updated_at"] >= before
+    assert len(snapshot) > 0

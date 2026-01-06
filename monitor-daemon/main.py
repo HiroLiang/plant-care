@@ -7,6 +7,8 @@ from application.monitor_service import MonitorService
 from dotenv import load_dotenv
 from interface.http.api import create_app
 
+from infrastructure.module.local_module import LocalSensorModule
+
 # Use mock while testing
 from infrastructure.sensor.mock import (
     MockTemperatureSensor,
@@ -15,7 +17,7 @@ from infrastructure.sensor.mock import (
 
 # While deploy on Raspberry：
 from infrastructure.sensor.sht31 import (
-    _SHT31Device,
+    SHT31Device,
     SHT31TemperatureSensor,
     SHT31HumiditySensor,
 )
@@ -26,21 +28,21 @@ load_dotenv()
 POLL_INTERVAL = 2.0
 
 
-def build_sensors():
-    backend = os.getenv("SENSOR_BACKEND", "mock")
+def build_local_module():
+    runtime = os.getenv("RUNTIME_ENV", "mock")
 
-    if backend == "sht31":
-        device = _SHT31Device()
-        return (
-            SHT31TemperatureSensor(device),
-            SHT31HumiditySensor(device),
-        )
+    module = LocalSensorModule()
+
+    if runtime == "rasp":
+        device = SHT31Device()
+        module.add_sensor(SHT31TemperatureSensor(device))
+        module.add_sensor(SHT31HumiditySensor(device))
 
     # default: mock
-    return (
-        MockTemperatureSensor(base=26.5),
-        MockHumiditySensor(base=55.0),
-    )
+    module.add_sensor(MockTemperatureSensor(base=26.5))
+    module.add_sensor(MockHumiditySensor(base=55.0))
+
+    return module
 
 
 def start_polling(service: MonitorService):
@@ -51,12 +53,9 @@ def start_polling(service: MonitorService):
 
 def main():
     # --- wiring ---
-    temp_sensor, humidity_sensor = build_sensors()
+    local_modules = build_local_module()
 
-    service = MonitorService(
-        temp_sensor=temp_sensor,
-        humidity_sensor=humidity_sensor,
-    )
+    service = MonitorService([local_modules])
 
     # --- background polling ---
     t = threading.Thread(
