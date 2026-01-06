@@ -1,3 +1,61 @@
-*/**/.envrc
-*/**/.venv
-*/**/.env
+# Environment / Secrets
+.env
+.envrc
+.venv
+**/.env
+**/.envrc
+**/.venv
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+
+# STM32CubeIDE / Eclipse (MCU firmware)
+
+# IDE metadata
+firmware/**/.metadata/
+firmware/**/.settings/
+firmware/**/.project
+firmware/**/.cproject
+firmware/**/.mxproject
+firmware/**/.ide.log
+
+# Build output
+firmware/**/Debug/
+firmware/**/Release/
+firmware/**/build/
+
+# Generated / vendor code (re-creatable from .ioc)
+firmware/**/Drivers/
+firmware/**/Middlewares/
+
+# IDE logs / locks
+firmware/**/*.log
+firmware/**/*.lock
+
+
+# MCU compile artifacts (generic)
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+*.lss
+*.sym
+
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
