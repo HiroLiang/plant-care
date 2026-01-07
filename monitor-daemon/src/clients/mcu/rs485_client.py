@@ -1,0 +1,6 @@
+class Rs485Client:
+    def __init__(self):
+        ...
+
+    async def close(self):
+        ...

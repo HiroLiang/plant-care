@@ -1,7 +1,7 @@
 from typing import List
 
 from domain.sensor import Sensor, SensorReading
-from domain.module import SensorModule, ModuleType
+from domain.module import SensorModule, ModuleType, ModuleInfo
 
 
 class LocalSensorModule(SensorModule):
@@ -21,8 +21,29 @@ class LocalSensorModule(SensorModule):
     def module_type(self) -> ModuleType:
         return ModuleType.LOCAL
 
+    def get_info(self) -> ModuleInfo:
+        return ModuleInfo(
+            module_id=self.module_id,
+            module_type=ModuleType.LOCAL,
+            sensors=[s.sensor_id for s in self._sensors],
+        )
+
     def add_sensor(self, sensor: Sensor) -> None:
         self._sensors.append(sensor)
+
+    def remove_sensor(self, sensor_id: str) -> None:
+        for s in self._sensors:
+            if s.sensor_id == sensor_id:
+                self._sensors.remove(s)
+
+    def get_sensor_ids(self) -> list[str]:
+        return [s.sensor_id for s in self._sensors]
+
+    def get_sensor(self, sensor_id: str) -> Sensor | None:
+        for s in self._sensors:
+            if s.sensor_id == sensor_id:
+                return s
+        return None
 
     def get_sensors(self) -> list[Sensor]:
         return self._sensors

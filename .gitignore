@@ -5,7 +5,7 @@
 **/.env
 **/.envrc
 **/.venv
-
+*/data/*.sqlite3
 
 # Python
 __pycache__/

@@ -19,6 +19,7 @@ Environment=PYTHONPATH=/home/hiro/plant-care/monitor-daemon/src
 Environment=HTTP_HOST=0.0.0.0
 Environment=HTTP_PORT=8001
 Environment=SENSOR_BACKEND=sht31
+Environment=DB_PATH=data/dev.sqlite3
 
 Restart=always
 RestartSec=5

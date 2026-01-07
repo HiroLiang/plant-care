@@ -1,19 +1,7 @@
 from fastapi import FastAPI
-from application.monitor_service import MonitorService
+from interface.http.routers import daemon, monitors
 
 
-def create_app(service: MonitorService) -> FastAPI:
-    app = FastAPI(title="Monitor Daemon")
-
-    @app.get("/health")
-    def health():
-        return {"status": "ok"}
-
-    @app.get("/status")
-    def get_status():
-        """
-        Read-only snapshot of latest sensor values.
-        """
-        return service.snapshot()
-
-    return app
+def register_routers(app: FastAPI):
+    app.include_router(daemon.router)
+    app.include_router(monitors.router)
