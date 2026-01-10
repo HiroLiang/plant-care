@@ -9,7 +9,7 @@ from bootstrap.services import init_services
 
 async def bootstrap() -> AppContext:
     # Setup logging
-    setup_logging(logging.INFO)
+    setup_logging(logging.INFO, False)
 
     # Initialize database
     db = await init_database()

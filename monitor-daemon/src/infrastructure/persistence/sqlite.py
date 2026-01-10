@@ -34,7 +34,7 @@ class SQLiteDatasource(DataSource):
         Initialize the SQLite database (process queries from schema.sql)
         """
         logger.info("sqlite_initialize_schema")
-        with open("infrastructure/persistence/schema.sql") as query:
+        with open("src/infrastructure/persistence/schema.sql") as query:
             await self._db.executescript(query.read())
 
     async def close(self) -> None:

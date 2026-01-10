@@ -4,6 +4,8 @@
 
 ## Start Up
 
+- monitor-daemon
+
 ```shell
 # 1. git clone
 git clone https://github.com/HiroLiang/plant-care.git
@@ -24,16 +26,12 @@ pip install -r requirements.txt
 pip install adafruit-circuitpython-sht31d
 
 # 6. start system (mock test)
-PYTHONPATH=src \
-HTTP_HOST=127.0.0.1 \
-HTTP_PORT=8001 \
-SENSOR_BACKEND=mock \
-.venv/bin/python main.py
+make dev
 
 # (use SHT31)
 PYTHONPATH=src \
 HTTP_HOST=0.0.0.0 \
 HTTP_PORT=8001 \
-SENSOR_BACKEND=sht31 \
-.venv/bin/python main.py
+SENSOR_BACKEND=rasp \
+.venv/bin/python src/main.py
 ```

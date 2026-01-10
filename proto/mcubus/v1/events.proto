@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package mcubus.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message BusEvent {
+  string event_id = 1;
+  string module_id = 2;
+  google.protobuf.Timestamp timestamp = 3;
+
+  oneof payload {
+    SensorData sensor_data = 10;
+    ControlStatus control_status = 11;
+    AlertEvent alert = 12;
+  }
+}
+
+message SensorData {
+  float temperature = 1;
+  float humidity = 2;
+  float soil_moisture = 3;
+  float light_level = 4;
+  float water_level = 5;
+  float ph_value = 6;
+}
+
+message ControlStatus {
+  string device = 1;
+  bool is_active = 2;
+  float power_level = 3;
+  string reason = 4;
+}
+
+message AlertEvent {
+  string severity = 1;
+  string code = 2;
+  string message = 3;
+}

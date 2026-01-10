@@ -12,7 +12,7 @@ def setup_logging(level: int = logging.INFO, json_output: bool = True):
         )
     else:
         formatter = logging.Formatter(
-            "%(levelname)s %(asctime)s [%(name)s] %(message)s"
+            "%(levelname)s: %(asctime)s [%(name)s] %(message)s"
         )
 
     handler.setFormatter(formatter)

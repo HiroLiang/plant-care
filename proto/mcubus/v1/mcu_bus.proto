@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package mcubus.v1;
+
+import "mcubus/v1/events.proto";
+import "mcubus/v1/messages.proto";
+
+service MCUBusService {
+  // - Regist a module ID for MCU -
+  rpc Register(RegisterRequest) returns (RegisterReply);
+
+  // - Cancel the link between MCU and module ID -
+  rpc UnRegister(UnSubscribeRequest) returns (UnSubscribeReplay);
+
+  // - Subscribe mcu bus daemon to receive mcu events -
+  rpc SubscribeEvents(SubscribeRequest) returns (stream BusEvent);
+}

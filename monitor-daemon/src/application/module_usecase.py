@@ -1,0 +1,6 @@
+class ModuleUseCase:
+    def __init__(self):
+        ...
+
+    def new_module(self):
+        ...

@@ -13,7 +13,7 @@ DB_PATH = Path(
 async def init_database() -> DataSource:
     db = SQLiteDatasource(DB_PATH)
     await db.connect()
-    # await db.init_schema()
+    await db.init_schema()
     return db
 
 

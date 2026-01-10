@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Protocol, runtime_checkable
-
-from .sensor import Sensor, SensorReading
+from sensor import Sensor, SensorReading
 
 
 class ModuleType(Enum):
