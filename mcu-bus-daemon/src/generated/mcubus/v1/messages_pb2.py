@@ -24,25 +24,21 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18mcubus/v1/messages.proto\x12\tmcubus.v1\"\xa6\x01\n\x0fRegisterRequest\x12\x11\n\tmodule_id\x18\x01 \x01(\t\x12\x13\n\x0bmodule_type\x18\x02 \x01(\t\x12:\n\x08metadata\x18\x03 \x03(\x0b\x32(.mcubus.v1.RegisterRequest.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"F\n\rRegisterReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x13\n\x0b\x61ssigned_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"\'\n\x12UnSubscribeRequest\x12\x11\n\tmodule_id\x18\x01 \x01(\t\"5\n\x11UnSubscribeReplay\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\";\n\x10SubscribeRequest\x12\x12\n\nmodule_ids\x18\x01 \x03(\t\x12\x13\n\x0b\x65vent_types\x18\x02 \x03(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18mcubus/v1/messages.proto\x12\tmcubus.v1\"\x11\n\x0fRegisterRequest\"D\n\rRegisterReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x11\n\tmodule_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"\'\n\x12UnSubscribeRequest\x12\x11\n\tmodule_id\x18\x01 \x01(\t\"5\n\x11UnSubscribeReplay\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x12\n\x10SubscribeRequestb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'mcubus.v1.messages_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_REGISTERREQUEST_METADATAENTRY']._loaded_options = None
-  _globals['_REGISTERREQUEST_METADATAENTRY']._serialized_options = b'8\001'
-  _globals['_REGISTERREQUEST']._serialized_start=40
-  _globals['_REGISTERREQUEST']._serialized_end=206
-  _globals['_REGISTERREQUEST_METADATAENTRY']._serialized_start=159
-  _globals['_REGISTERREQUEST_METADATAENTRY']._serialized_end=206
-  _globals['_REGISTERREPLY']._serialized_start=208
-  _globals['_REGISTERREPLY']._serialized_end=278
-  _globals['_UNSUBSCRIBEREQUEST']._serialized_start=280
-  _globals['_UNSUBSCRIBEREQUEST']._serialized_end=319
-  _globals['_UNSUBSCRIBEREPLAY']._serialized_start=321
-  _globals['_UNSUBSCRIBEREPLAY']._serialized_end=374
-  _globals['_SUBSCRIBEREQUEST']._serialized_start=376
-  _globals['_SUBSCRIBEREQUEST']._serialized_end=435
+  _globals['_REGISTERREQUEST']._serialized_start=39
+  _globals['_REGISTERREQUEST']._serialized_end=56
+  _globals['_REGISTERREPLY']._serialized_start=58
+  _globals['_REGISTERREPLY']._serialized_end=126
+  _globals['_UNSUBSCRIBEREQUEST']._serialized_start=128
+  _globals['_UNSUBSCRIBEREQUEST']._serialized_end=167
+  _globals['_UNSUBSCRIBEREPLAY']._serialized_start=169
+  _globals['_UNSUBSCRIBEREPLAY']._serialized_end=222
+  _globals['_SUBSCRIBEREQUEST']._serialized_start=224
+  _globals['_SUBSCRIBEREQUEST']._serialized_end=242
 # @@protoc_insertion_point(module_scope)

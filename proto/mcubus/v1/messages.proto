@@ -2,15 +2,11 @@ syntax = "proto3";
 
 package mcubus.v1;
 
-message RegisterRequest {
-  string module_id = 1;
-  string module_type = 2;
-  map<string, string> metadata = 3;
-}
+message RegisterRequest {}
 
 message RegisterReply {
   bool success = 1;
-  string assigned_id = 2;
+  string module_id = 2;
   string message = 3;
 }
 
@@ -23,7 +19,4 @@ message UnSubscribeReplay {
   string message = 2;
 }
 
-message SubscribeRequest {
-  repeated string module_ids = 1;
-  repeated string event_types = 2;
-}
+message SubscribeRequest {}

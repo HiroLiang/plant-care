@@ -9,6 +9,7 @@ from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
     _runtime_version.Domain.PUBLIC,
     6,
@@ -21,18 +22,17 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 
 _sym_db = _symbol_database.Default()
 
+from generated.mcubus.v1 import events_pb2 as mcubus_dot_v1_dot_events__pb2
+from generated.mcubus.v1 import messages_pb2 as mcubus_dot_v1_dot_messages__pb2
 
-from mcubus.v1 import events_pb2 as mcubus_dot_v1_dot_events__pb2
-from mcubus.v1 import messages_pb2 as mcubus_dot_v1_dot_messages__pb2
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17mcubus/v1/mcu_bus.proto\x12\tmcubus.v1\x1a\x16mcubus/v1/events.proto\x1a\x18mcubus/v1/messages.proto2\xe3\x01\n\rMCUBusService\x12@\n\x08Register\x12\x1a.mcubus.v1.RegisterRequest\x1a\x18.mcubus.v1.RegisterReply\x12I\n\nUnRegister\x12\x1d.mcubus.v1.UnSubscribeRequest\x1a\x1c.mcubus.v1.UnSubscribeReplay\x12\x45\n\x0fSubscribeEvents\x12\x1b.mcubus.v1.SubscribeRequest\x1a\x13.mcubus.v1.BusEvent0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x17mcubus/v1/mcu_bus.proto\x12\tmcubus.v1\x1a\x16mcubus/v1/events.proto\x1a\x18mcubus/v1/messages.proto2\xe3\x01\n\rMCUBusService\x12@\n\x08Register\x12\x1a.mcubus.v1.RegisterRequest\x1a\x18.mcubus.v1.RegisterReply\x12I\n\nUnRegister\x12\x1d.mcubus.v1.UnSubscribeRequest\x1a\x1c.mcubus.v1.UnSubscribeReplay\x12\x45\n\x0fSubscribeEvents\x12\x1b.mcubus.v1.SubscribeRequest\x1a\x13.mcubus.v1.BusEvent0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'mcubus.v1.mcu_bus_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_MCUBUSSERVICE']._serialized_start=89
-  _globals['_MCUBUSSERVICE']._serialized_end=316
+    DESCRIPTOR._loaded_options = None
+    _globals['_MCUBUSSERVICE']._serialized_start = 89
+    _globals['_MCUBUSSERVICE']._serialized_end = 316
 # @@protoc_insertion_point(module_scope)

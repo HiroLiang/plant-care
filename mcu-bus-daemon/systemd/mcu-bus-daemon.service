@@ -3,6 +3,7 @@ Description=MCU Bus Daemon
 After=network.target
 
 [Service]
+EnvironmentFile=/home/hiro/plant-care/mcu-bus-daemon/.env
 ExecStart=/usr/bin/python3 -m mcu_bus_daemon
 Restart=always
 RestartSec=2
