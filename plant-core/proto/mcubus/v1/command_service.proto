@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package mcubus.v1;
+
+import "mcubus/v1/commands.proto";
+
+// control-daemon 對 mcu-bus-daemon 下發 MCU 命令的 gRPC 服務。
+// gRPC service used by control-daemon to send MCU commands to mcu-bus-daemon.
+service MCUBusCommandService {
+  // 接收一筆 MCU 命令並回傳接收結果。
+  // Accept one MCU command and return the intake result.
+  rpc DispatchCommand(DispatchCommandRequest) returns (DispatchCommandReply);
+}

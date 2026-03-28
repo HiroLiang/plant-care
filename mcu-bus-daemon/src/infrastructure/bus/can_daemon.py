@@ -11,7 +11,7 @@ from threading import Event, Thread
 
 from application.bus_daemon import BusDaemon
 from application.subscription_handler import SubscriptionHandler
-from domain.mcu_bus import AlertEvent, BusEvent, SensorDataEvent
+from domain.mcu_bus import AlertEvent, BusEvent, HeartbeatEvent, TelemetryEvent, TelemetryReading
 from infrastructure.bus.can_protocol import DataType, parse_can_id, HeartbeatData, ErrorCode, TempHumData
 
 logger = logging.getLogger(__name__)
@@ -231,14 +231,25 @@ class CanBusDaemon(BusDaemon):
                 logger.error(f"Heartbeat: {heartbeat.status}")
                 self._rpc_handler.publish(BusEvent(
                     event_id=self._new_event_id(node_id),
-                    module_id=str(node_id),
-                    timestamp=datetime.now(),
+                    source_node_id=node_id,
+                    emitted_at=datetime.now(),
                     payload=AlertEvent(
                         severity="error",
                         code=f"heartbeat_status_{heartbeat.status}",
                         message=str(heartbeat),
                     ),
                 ))
+
+            self._rpc_handler.publish(BusEvent(
+                event_id=self._new_event_id(node_id),
+                source_node_id=node_id,
+                emitted_at=datetime.now(),
+                payload=HeartbeatEvent(
+                    status=heartbeat.status,
+                    voltage=heartbeat.voltage,
+                    uptime_seconds=heartbeat.uptime,
+                ),
+            ))
 
         except Exception as e:
             logger.error(f"Error handling heartbeat: {e}")
@@ -257,11 +268,23 @@ class CanBusDaemon(BusDaemon):
             # Send data through gRPC
             self._rpc_handler.publish(BusEvent(
                 event_id=self._new_event_id(node_id),
-                module_id=str(node_id),
-                timestamp=datetime.now(),
-                payload=SensorDataEvent(
-                    temperature=temp_hum.temperature,
-                    humidity=temp_hum.humidity,
+                source_node_id=node_id,
+                emitted_at=datetime.now(),
+                payload=TelemetryEvent(
+                    readings=[
+                        TelemetryReading(
+                            sensor_type="temperature",
+                            value=temp_hum.temperature,
+                            unit="celsius",
+                            status="ok" if temp_hum.status == 0 else "error",
+                        ),
+                        TelemetryReading(
+                            sensor_type="humidity",
+                            value=temp_hum.humidity,
+                            unit="percent",
+                            status="ok" if temp_hum.status == 0 else "error",
+                        ),
+                    ]
                 )
             ))
 

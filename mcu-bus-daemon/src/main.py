@@ -15,8 +15,8 @@ from infrastructure.bus.can_daemon import CanBusDaemon
 from infrastructure.bus.rpc_subscription_handler import RpcSubscriptionHandler
 from infrastructure.shared.logger import setup_logging
 
-from infrastructure.servicer.mcu_bus_servicer import MCUBusServer
-from mcubus.v1 import mcu_bus_pb2_grpc
+from infrastructure.servicer.mcu_bus_servicer import MCUBusCommandServer, MCUBusEventServer
+from mcubus.v1 import command_service_pb2_grpc, event_service_pb2_grpc
 
 
 def main(
@@ -29,7 +29,8 @@ def main(
 
     # Build servicer
     handler = RpcSubscriptionHandler()
-    servicer = MCUBusServer(handler)
+    command_servicer = MCUBusCommandServer()
+    event_servicer = MCUBusEventServer(handler)
     can_daemon = CanBusDaemon(handler, channel=channel, bitrate=bitrate)
 
     # Build gRPC service
@@ -40,7 +41,8 @@ def main(
             ("grpc.max_receive_message_length", 10 * 1024 * 1024),
         ]
     )
-    mcu_bus_pb2_grpc.add_MCUBusServiceServicer_to_server(servicer, server)
+    command_service_pb2_grpc.add_MCUBusCommandServiceServicer_to_server(command_servicer, server)
+    event_service_pb2_grpc.add_MCUBusEventServiceServicer_to_server(event_servicer, server)
     server.add_insecure_port(f"[::]:{port}")
 
     # Start gRPC server

@@ -1,10 +1,10 @@
-import time
-import threading
 import logging
+import threading
+import time
 
-from domain.mcu_bus_event import AlertEvent, MCUBusEvent, SensorDataEvent
-from domain.sensor import SensorReading
+from domain.mcu_bus_event import AlertEvent, MCUBusEvent, TelemetryEvent
 from domain.module import SensorModule
+from domain.sensor import SensorReading
 from domain.sensor import SensorType
 
 logger = logging.getLogger(__name__)
@@ -29,30 +29,34 @@ class MonitorService:
     def ingest_mcu_event(self, event: MCUBusEvent) -> None:
         payload = event.payload
 
-        if isinstance(payload, SensorDataEvent):
-            event_ts = event.timestamp.timestamp()
-            self.upsert_reading(SensorReading(
-                sensor_id=f"mcu:{event.module_id}:temperature",
-                sensor_type=SensorType.TEMPERATURE,
-                value=payload.temperature,
-                unit="°C",
-                timestamp=event_ts,
-                module_id=event.module_id,
-            ))
-            self.upsert_reading(SensorReading(
-                sensor_id=f"mcu:{event.module_id}:humidity",
-                sensor_type=SensorType.HUMIDITY,
-                value=payload.humidity,
-                unit="%",
-                timestamp=event_ts,
-                module_id=event.module_id,
-            ))
+        if isinstance(payload, TelemetryEvent):
+            event_ts = event.emitted_at.timestamp()
+            module_id = str(event.source_node_id)
+            sensor_type_map = {
+                "temperature": (SensorType.TEMPERATURE, "°C"),
+                "humidity": (SensorType.HUMIDITY, "%"),
+            }
+
+            for reading in payload.readings:
+                mapping = sensor_type_map.get(reading.sensor_type)
+                if mapping is None:
+                    continue
+
+                sensor_type, unit = mapping
+                self.upsert_reading(SensorReading(
+                    sensor_id=f"mcu:{module_id}:{reading.sensor_type}",
+                    sensor_type=sensor_type,
+                    value=reading.value,
+                    unit=unit,
+                    timestamp=event_ts,
+                    module_id=module_id,
+                ))
             return
 
         if isinstance(payload, AlertEvent):
             logger.warning(
                 "MCU alert received from module %s: [%s] %s",
-                event.module_id,
+                event.source_node_id,
                 payload.code,
                 payload.message,
             )

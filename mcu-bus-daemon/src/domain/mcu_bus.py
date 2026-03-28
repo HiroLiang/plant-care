@@ -1,24 +1,43 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Union
 
 
 @dataclass(frozen=True)
-class SensorDataEvent:
-    temperature: float
-    humidity: float
-    soil_moisture: float = 0.0
-    light_level: float = 0.0
-    water_level: float = 0.0
-    ph_value: float = 0.0
+class TelemetryReading:
+    sensor_type: str
+    value: float
+    unit: str
+    channel: str = ""
+    status: str = "ok"
 
 
 @dataclass(frozen=True)
-class ControlStatusEvent:
-    device: str
+class TelemetryEvent:
+    readings: list[TelemetryReading] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class HeartbeatEvent:
+    status: int
+    voltage: float
+    uptime_seconds: int
+
+
+@dataclass(frozen=True)
+class DeviceStateEvent:
+    device_type: str
     is_active: bool
-    power_level: float
-    reason: str
+    level: float = 0.0
+    reason: str = ""
+
+
+@dataclass(frozen=True)
+class CommandResultEvent:
+    command_id: str
+    status: str
+    message: str
+    device_type: str = ""
 
 
 @dataclass(frozen=True)
@@ -29,8 +48,10 @@ class AlertEvent:
 
 
 BusPayload = Union[
-    SensorDataEvent,
-    ControlStatusEvent,
+    TelemetryEvent,
+    HeartbeatEvent,
+    DeviceStateEvent,
+    CommandResultEvent,
     AlertEvent,
 ]
 
@@ -38,6 +59,8 @@ BusPayload = Union[
 @dataclass(frozen=True)
 class BusEvent:
     event_id: str
-    module_id: str
-    timestamp: datetime
+    source_node_id: int
+    emitted_at: datetime
     payload: BusPayload
+    correlation_id: str = ""
+    command_id: str = ""

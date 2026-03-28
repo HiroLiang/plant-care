@@ -1,10 +1,6 @@
 import logging
 
-from bootstrap.clients import init_clients, shoutdown_clients
 from bootstrap.context import AppContext
-from bootstrap.database import init_database, shout_database
-from bootstrap.logging import setup_logging
-from bootstrap.services import init_services
 from domain.mcu_bus_event import MCUBusEvent
 
 logger = logging.getLogger(__name__)
@@ -28,6 +24,11 @@ def wire_mcu_bus_subscription(ctx: AppContext) -> None:
 
 
 async def bootstrap() -> AppContext:
+    from bootstrap.clients import init_clients
+    from bootstrap.database import init_database
+    from bootstrap.logging import setup_logging
+    from bootstrap.services import init_services
+
     # Setup logging
     setup_logging(logging.INFO, False)
 
@@ -50,5 +51,8 @@ async def bootstrap() -> AppContext:
 
 
 async def shutdown(ctx: AppContext) -> None:
+    from bootstrap.clients import shoutdown_clients
+    from bootstrap.database import shout_database
+
     await shout_database(ctx.db)
     await shoutdown_clients(ctx.clients)

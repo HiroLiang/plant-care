@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package mcubus.v1;
+
+import "mcubus/v1/events.proto";
+
+// monitor-daemon 訂閱 mcu-bus-daemon 公播事件的 gRPC 服務。
+// gRPC service used by monitor-daemon to subscribe to mcu-bus-daemon broadcasts.
+service MCUBusEventService {
+  // 建立長連線訂閱並持續接收 bus 事件。
+  // Open a long-lived subscription and continuously receive bus events.
+  rpc SubscribeBusEvents(SubscribeBusEventsRequest) returns (stream BusEvent);
+}

@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package mcubus.v1;
+
+import "google/protobuf/timestamp.proto";
+import "mcubus/v1/common.proto";
+
+// control-daemon 呼叫 mcu-bus-daemon 時使用的命令下發請求。
+// Request envelope used by control-daemon to dispatch commands to mcu-bus-daemon.
+message DispatchCommandRequest {
+  // 命令主體，包含目標與實際 payload。
+  // Command body containing the target and concrete payload.
+  McuCommand command = 1;
+}
+
+// mcu-bus-daemon 對命令接收結果的同步回覆。
+// Synchronous acknowledgement returned by mcu-bus-daemon after command intake.
+message DispatchCommandReply {
+  // 命令追蹤 ID，應與請求中的 command_id 相同。
+  // Stable command tracking id, normally mirroring the request command_id.
+  string command_id = 1;
+
+  // 命令是否已被接收並進入處理流程。
+  // Whether the command was accepted into the processing pipeline.
+  bool accepted = 2;
+
+  // 命令接收結果狀態。
+  // Intake result status for the command.
+  CommandStatus status = 3;
+
+  // 給人類閱讀的結果說明。
+  // Human-readable explanation of the intake result.
+  string message = 4;
+
+  // mcu-bus-daemon 接收此命令的時間。
+  // Time when mcu-bus-daemon accepted this command request.
+  google.protobuf.Timestamp accepted_at = 5;
+}
+
+// 由 control-daemon 發往 mcu-bus-daemon 的 MCU 命令。
+// MCU command sent from control-daemon to mcu-bus-daemon.
+message McuCommand {
+  // 全域唯一命令 ID，用於日誌與後續事件對應。
+  // Globally unique command id for logs and later event correlation.
+  string command_id = 1;
+
+  // 可選的關聯 ID，用於串接 HTTP request、工作流程或批次操作。
+  // Optional correlation id linking HTTP requests, workflows, or batches.
+  string correlation_id = 2;
+
+  // 命令目標 MCU。
+  // Target MCU for this command.
+  McuNodeRef target = 3;
+
+  // 發出命令的來源系統，例如 control-daemon。
+  // Issuing system, such as control-daemon.
+  string issued_by = 4;
+
+  // 建立命令的時間。
+  // Time when the command was requested.
+  google.protobuf.Timestamp requested_at = 5;
+
+  // 命令高階類型，方便快速分類與驗證。
+  // High-level command type for validation and categorization.
+  CommandType type = 6;
+
+  oneof payload {
+    // 致動器控制命令。
+    // Actuator control command.
+    ActuatorCommand actuator_command = 10;
+
+    // 立即請求遙測資料。
+    // Immediate telemetry request.
+    RequestTelemetryCommand request_telemetry_command = 11;
+
+    // 重設 MCU。
+    // Reset the MCU.
+    ResetCommand reset_command = 12;
+
+    // 設定閾值。
+    // Set a threshold value.
+    SetThresholdCommand set_threshold_command = 13;
+  }
+}
+
+// 對 pump / fan / light 等裝置下達操作。
+// Operation targeting an actuator such as pump, fan, or light.
+message ActuatorCommand {
+  // 目標裝置種類。
+  // Device type to be controlled.
+  DeviceType device_type = 1;
+
+  // 欲執行的操作。
+  // Requested operation.
+  ActuatorOperation operation = 2;
+
+  // 當 operation 為 SET_LEVEL 時使用的等級值。
+  // Desired level when operation is SET_LEVEL.
+  float level = 3;
+}
+
+// 要求 MCU 立即回報遙測資料。
+// Request the MCU to emit telemetry immediately.
+message RequestTelemetryCommand {
+  // 需要回報的感測器類型；空集合表示由 MCU 決定預設全集。
+  // Sensor types to report; empty means the MCU should use its default set.
+  repeated SensorType sensor_types = 1;
+}
+
+// 要求 MCU 重新啟動。
+// Request the MCU to reboot.
+message ResetCommand {
+  // 可選的重設原因，利於審計與診斷。
+  // Optional reset reason for auditability and diagnostics.
+  string reason = 1;
+}
+
+// 設定某個感測量或控制條件的閾值。
+// Set a threshold for a sensor metric or control condition.
+message SetThresholdCommand {
+  // 要套用閾值的感測器類型。
+  // Sensor type that the threshold applies to.
+  SensorType sensor_type = 1;
+
+  // 閾值數值。
+  // Threshold numeric value.
+  float value = 2;
+
+  // 閾值使用的單位。
+  // Unit of the threshold value.
+  ValueUnit unit = 3;
+
+  // 可選的邏輯通道名稱，例如 zone 或 sensor channel。
+  // Optional logical channel such as a zone or sensor channel.
+  string channel = 4;
+}

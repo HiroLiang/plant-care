@@ -1,17 +1,14 @@
 from datetime import datetime, timezone
-import asyncio
+from types import SimpleNamespace
 
 from application.monitor_service import MonitorService
-from bootstrap.bootstrap import AppContext, wire_mcu_bus_subscription
-from bootstrap.clients import Clients
-from bootstrap.services import Services
-from domain.mcu_bus_event import AlertEvent, MCUBusEvent, SensorDataEvent
+from bootstrap.bootstrap import wire_mcu_bus_subscription
+from domain.mcu_bus_event import AlertEvent, MCUBusEvent, TelemetryEvent, TelemetryReading
 from infrastructure.module.local_module import LocalSensorModule
 from infrastructure.sensor.mock import (
     MockTemperatureSensor,
     MockHumiditySensor,
 )
-from interface.http.routers.monitors import get_all_status
 
 
 class FakeMCUBusClient:
@@ -59,15 +56,13 @@ def test_monitor_service_ingests_mcu_sensor_event():
 
     service.ingest_mcu_event(MCUBusEvent(
         event_id="evt-1",
-        module_id="1",
-        timestamp=datetime(2026, 3, 18, tzinfo=timezone.utc),
-        payload=SensorDataEvent(
-            temperature=25.5,
-            humidity=60.0,
-            soil_moisture=0.0,
-            light_level=0.0,
-            water_level=0.0,
-            ph_value=0.0,
+        source_node_id=1,
+        emitted_at=datetime(2026, 3, 18, tzinfo=timezone.utc),
+        payload=TelemetryEvent(
+            readings=[
+                TelemetryReading(sensor_type="temperature", value=25.5, unit="celsius"),
+                TelemetryReading(sensor_type="humidity", value=60.0, unit="percent"),
+            ]
         ),
     ))
 
@@ -82,8 +77,8 @@ def test_monitor_service_ignores_alert_event_for_snapshot():
 
     service.ingest_mcu_event(MCUBusEvent(
         event_id="evt-1",
-        module_id="1",
-        timestamp=datetime(2026, 3, 18, tzinfo=timezone.utc),
+        source_node_id=1,
+        emitted_at=datetime(2026, 3, 18, tzinfo=timezone.utc),
         payload=AlertEvent(
             severity="error",
             code="heartbeat_status_79",
@@ -103,19 +98,18 @@ def test_all_status_contains_local_and_mcu_readings():
     service = MonitorService(modules=[module])
     service.ingest_mcu_event(MCUBusEvent(
         event_id="evt-1",
-        module_id="1",
-        timestamp=datetime(2026, 3, 18, tzinfo=timezone.utc),
-        payload=SensorDataEvent(
-            temperature=25.5,
-            humidity=60.0,
-            soil_moisture=0.0,
-            light_level=0.0,
-            water_level=0.0,
-            ph_value=0.0,
+        source_node_id=1,
+        emitted_at=datetime(2026, 3, 18, tzinfo=timezone.utc),
+        payload=TelemetryEvent(
+            readings=[
+                TelemetryReading(sensor_type="temperature", value=25.5, unit="celsius"),
+                TelemetryReading(sensor_type="humidity", value=60.0, unit="percent"),
+            ]
         ),
     ))
 
-    snapshot = asyncio.run(get_all_status(service))
+    service.poll()
+    snapshot = service.snapshot()
 
     assert "mock_temperature_sensor" in snapshot["readings"]
     assert "mcu:1:temperature" in snapshot["readings"]
@@ -125,10 +119,10 @@ def test_all_status_contains_local_and_mcu_readings():
 def test_wire_mcu_bus_subscription_starts_client_and_routes_events():
     service = MonitorService(modules=[])
     fake_client = FakeMCUBusClient()
-    ctx = AppContext(
+    ctx = SimpleNamespace(
         db=None,
-        clients=Clients(ctrl_client=None, rs485_client=None, mcu_bus_client=fake_client),
-        services=Services(monitor_service=service),
+        clients=SimpleNamespace(mcu_bus_client=fake_client),
+        services=SimpleNamespace(monitor_service=service),
     )
 
     wire_mcu_bus_subscription(ctx)
@@ -139,15 +133,13 @@ def test_wire_mcu_bus_subscription_starts_client_and_routes_events():
     on_event, _ = fake_client.subscription
     on_event(MCUBusEvent(
         event_id="evt-1",
-        module_id="1",
-        timestamp=datetime(2026, 3, 18, tzinfo=timezone.utc),
-        payload=SensorDataEvent(
-            temperature=25.5,
-            humidity=60.0,
-            soil_moisture=0.0,
-            light_level=0.0,
-            water_level=0.0,
-            ph_value=0.0,
+        source_node_id=1,
+        emitted_at=datetime(2026, 3, 18, tzinfo=timezone.utc),
+        payload=TelemetryEvent(
+            readings=[
+                TelemetryReading(sensor_type="temperature", value=25.5, unit="celsius"),
+                TelemetryReading(sensor_type="humidity", value=60.0, unit="percent"),
+            ]
         ),
     ))
 

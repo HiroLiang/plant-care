@@ -10,12 +10,12 @@ from domain.mcu_bus_event import MCUBusEvent
 from infrastructure.mcu.bus_event_adapter import to_domain
 from pathlib import Path
 
-GENERATED_ROOT = Path(__file__).resolve().parents[3] / "plant-core" / "src" / "generated"
+GENERATED_ROOT = Path(__file__).resolve().parents[4] / "plant-core" / "src" / "generated"
 generated_root_str = str(GENERATED_ROOT)
 if generated_root_str not in sys.path:
     sys.path.insert(0, generated_root_str)
 
-from mcubus.v1 import mcu_bus_pb2_grpc, events_pb2, messages_pb2
+from mcubus.v1 import event_service_pb2_grpc, events_pb2
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class GrpcMCUBusClient(MCUBusClient):
         self._stop_event = Event()
         self._subscription_thread: Optional[Thread] = None
         self._channel: Optional[grpc.Channel] = None
-        self._stub: Optional[mcu_bus_pb2_grpc.MCUBusServiceStub] = None
+        self._stub: Optional[event_service_pb2_grpc.MCUBusEventServiceStub] = None
 
     def is_connected(self) -> bool:
         return self._connected
@@ -44,7 +44,7 @@ class GrpcMCUBusClient(MCUBusClient):
 
         try:
             self._channel = grpc.insecure_channel(self._server_address)
-            self._stub = mcu_bus_pb2_grpc.MCUBusServiceStub(self._channel)
+            self._stub = event_service_pb2_grpc.MCUBusEventServiceStub(self._channel)
             self._connected = True
             logger.info("Connected to MCU Bus Server at %s", self._server_address)
         except Exception as e:
@@ -85,7 +85,9 @@ class GrpcMCUBusClient(MCUBusClient):
             raise RuntimeError("Not connected to server")
 
         try:
-            event_stream: Iterator[events_pb2.BusEvent] = self._stub.SubscribeEvents(messages_pb2.SubscribeRequest())
+            event_stream: Iterator[events_pb2.BusEvent] = self._stub.SubscribeBusEvents(
+                events_pb2.SubscribeBusEventsRequest()
+            )
 
             logger.info("Started subscribing to bus events")
 

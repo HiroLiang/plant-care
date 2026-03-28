@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+package mcubus.v1;
+
+// MCU 節點參考資訊，供命令與事件共用識別目標 MCU。
+// Shared MCU node reference used by both commands and events.
+message McuNodeRef {
+  // MCU 的 CAN / bus node id。
+  // CAN / bus node id of the MCU.
+  uint32 node_id = 1;
+
+  // 供人類辨識的節點名稱，非必要但利於日誌與除錯。
+  // Human-friendly node name for logs and diagnostics.
+  string display_name = 2;
+}
+
+// 命令接收或執行結果狀態。
+// Command acceptance or execution status.
+enum CommandStatus {
+  // 預設未知狀態，避免未初始化值被誤判為成功。
+  // Default unknown status to avoid treating zero values as success.
+  COMMAND_STATUS_UNSPECIFIED = 0;
+  // 命令已被 bus daemon 接受並排入處理。
+  // Command was accepted by the bus daemon for processing.
+  COMMAND_STATUS_ACCEPTED = 1;
+  // 命令執行完成且成功。
+  // Command execution completed successfully.
+  COMMAND_STATUS_SUCCEEDED = 2;
+  // 命令被拒絕，例如權限或目標狀態不允許。
+  // Command was rejected, such as by policy or target state.
+  COMMAND_STATUS_REJECTED = 3;
+  // 命令格式或內容無效。
+  // Command payload or arguments are invalid.
+  COMMAND_STATUS_INVALID_ARGUMENT = 4;
+  // bus daemon 或 MCU 尚未支援此命令。
+  // The bus daemon or MCU does not support this command yet.
+  COMMAND_STATUS_UNSUPPORTED = 5;
+  // 命令在傳輸或執行過程中失敗。
+  // The command failed while being transported or executed.
+  COMMAND_STATUS_FAILED = 6;
+}
+
+// 命令高階類型，用來描述命令意圖。
+// High-level command type describing the command intent.
+enum CommandType {
+  // 未指定命令類型。
+  // Unspecified command type.
+  COMMAND_TYPE_UNSPECIFIED = 0;
+  // 操作致動器，如 pump / fan / light。
+  // Actuator operation such as pump, fan, or light.
+  COMMAND_TYPE_ACTUATOR = 1;
+  // 請求 MCU 立即回報遙測資料。
+  // Request immediate telemetry from the MCU.
+  COMMAND_TYPE_REQUEST_TELEMETRY = 2;
+  // 要求 MCU 重新啟動。
+  // Request an MCU reset.
+  COMMAND_TYPE_RESET = 3;
+  // 設定 MCU 端使用的閾值。
+  // Configure a threshold used on the MCU side.
+  COMMAND_TYPE_SET_THRESHOLD = 4;
+}
+
+// 事件高階類型，用於訂閱過濾與分類。
+// High-level event type used for filtering and classification.
+enum EventType {
+  // 未指定事件類型。
+  // Unspecified event type.
+  EVENT_TYPE_UNSPECIFIED = 0;
+  // 感測與遙測資料事件。
+  // Telemetry or sensor data event.
+  EVENT_TYPE_TELEMETRY = 1;
+  // 心跳與健康狀態事件。
+  // Heartbeat or health status event.
+  EVENT_TYPE_HEARTBEAT = 2;
+  // 裝置狀態事件。
+  // Device state event.
+  EVENT_TYPE_DEVICE_STATE = 3;
+  // 命令結果事件。
+  // Command result event.
+  EVENT_TYPE_COMMAND_RESULT = 4;
+  // 警報事件。
+  // Alert or fault event.
+  EVENT_TYPE_ALERT = 5;
+}
+
+// MCU 上可被控制或觀察的裝置類型。
+// Device types that can be controlled or observed on the MCU.
+enum DeviceType {
+  // 未指定裝置。
+  // Unspecified device.
+  DEVICE_TYPE_UNSPECIFIED = 0;
+  // 水泵。
+  // Water pump.
+  DEVICE_TYPE_PUMP = 1;
+  // 風扇。
+  // Fan.
+  DEVICE_TYPE_FAN = 2;
+  // 補光燈或照明。
+  // Grow light or illumination device.
+  DEVICE_TYPE_LIGHT = 3;
+}
+
+// 致動器操作動作。
+// Operation to apply to an actuator.
+enum ActuatorOperation {
+  // 未指定操作。
+  // Unspecified operation.
+  ACTUATOR_OPERATION_UNSPECIFIED = 0;
+  // 開啟裝置。
+  // Turn the device on.
+  ACTUATOR_OPERATION_TURN_ON = 1;
+  // 關閉裝置。
+  // Turn the device off.
+  ACTUATOR_OPERATION_TURN_OFF = 2;
+  // 設定裝置輸出等級或強度。
+  // Set the device output level or intensity.
+  ACTUATOR_OPERATION_SET_LEVEL = 3;
+}
+
+// 感測器類型，供遙測資料標註。
+// Sensor types used to label telemetry readings.
+enum SensorType {
+  // 未指定感測器。
+  // Unspecified sensor type.
+  SENSOR_TYPE_UNSPECIFIED = 0;
+  // 溫度感測。
+  // Temperature sensor.
+  SENSOR_TYPE_TEMPERATURE = 1;
+  // 濕度感測。
+  // Humidity sensor.
+  SENSOR_TYPE_HUMIDITY = 2;
+  // 土壤濕度感測。
+  // Soil moisture sensor.
+  SENSOR_TYPE_SOIL_MOISTURE = 3;
+  // 光照感測。
+  // Light sensor.
+  SENSOR_TYPE_LIGHT_LEVEL = 4;
+  // 水位感測。
+  // Water level sensor.
+  SENSOR_TYPE_WATER_LEVEL = 5;
+  // 酸鹼值感測。
+  // pH sensor.
+  SENSOR_TYPE_PH = 6;
+}
+
+// 數值單位，避免以裸字串傳遞核心語義。
+// Units for numeric values to avoid bare strings in core semantics.
+enum ValueUnit {
+  // 未指定單位。
+  // Unspecified unit.
+  VALUE_UNIT_UNSPECIFIED = 0;
+  // 攝氏溫度。
+  // Degrees Celsius.
+  VALUE_UNIT_CELSIUS = 1;
+  // 相對濕度百分比。
+  // Relative humidity percentage.
+  VALUE_UNIT_PERCENT = 2;
+  // 電壓伏特。
+  // Electrical voltage in volts.
+  VALUE_UNIT_VOLT = 3;
+  // 無單位比例值，可表示 level 或 normalized 數值。
+  // Unitless ratio for levels or normalized values.
+  VALUE_UNIT_RATIO = 4;
+}
+
+// 警報嚴重程度。
+// Severity level for alerts.
+enum AlertSeverity {
+  // 未指定嚴重度。
+  // Unspecified severity.
+  ALERT_SEVERITY_UNSPECIFIED = 0;
+  // 資訊性事件。
+  // Informational event.
+  ALERT_SEVERITY_INFO = 1;
+  // 警告事件。
+  // Warning event.
+  ALERT_SEVERITY_WARNING = 2;
+  // 錯誤事件。
+  // Error event.
+  ALERT_SEVERITY_ERROR = 3;
+  // 致命事件。
+  // Critical or fatal event.
+  ALERT_SEVERITY_CRITICAL = 4;
+}
+
+// 單筆感測資料的健康狀態。
+// Health status of a single sensor reading.
+enum ReadingStatus {
+  // 未指定狀態。
+  // Unspecified reading status.
+  READING_STATUS_UNSPECIFIED = 0;
+  // 讀值正常。
+  // Reading is healthy.
+  READING_STATUS_OK = 1;
+  // 讀值異常或感測器回報錯誤。
+  // Reading is abnormal or sensor reported an error.
+  READING_STATUS_ERROR = 2;
+}

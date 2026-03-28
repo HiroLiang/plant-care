@@ -3,37 +3,174 @@ syntax = "proto3";
 package mcubus.v1;
 
 import "google/protobuf/timestamp.proto";
+import "mcubus/v1/common.proto";
 
+// monitor-daemon 訂閱 bus 公播事件時使用的請求。
+// Request used by monitor-daemon to subscribe to bus broadcast events.
+message SubscribeBusEventsRequest {
+  // 限制只接收這些 node id 的事件；空集合表示全部節點。
+  // Restrict events to these node ids; empty means all nodes.
+  repeated uint32 node_ids = 1;
+
+  // 限制只接收這些高階事件類型；空集合表示全部類型。
+  // Restrict events to these high-level event types; empty means all types.
+  repeated EventType event_types = 2;
+
+  // 是否包含系統層事件，例如 command result 或 bus alert。
+  // Whether to include system-level events such as command results or bus alerts.
+  bool include_system_events = 3;
+}
+
+// mcu-bus-daemon 對外廣播的標準事件包裝。
+// Standard event envelope broadcast by mcu-bus-daemon.
 message BusEvent {
+  // 全域唯一事件 ID。
+  // Globally unique event id.
   string event_id = 1;
-  string module_id = 2;
-  google.protobuf.Timestamp timestamp = 3;
+
+  // 事件來源 MCU node id。
+  // Source MCU node id.
+  uint32 source_node_id = 2;
+
+  // 事件送出時間。
+  // Time when the event was emitted.
+  google.protobuf.Timestamp emitted_at = 3;
+
+  // 可選的關聯 ID，用於串接外層工作流。
+  // Optional correlation id linking outer workflows.
+  string correlation_id = 4;
+
+  // 若事件與某個 command 有關，則帶上對應 command id。
+  // Command id when the event is related to a dispatched command.
+  string command_id = 5;
+
+  // 事件高階類型，利於快速過濾。
+  // High-level event type for quick filtering.
+  EventType event_type = 6;
 
   oneof payload {
-    SensorData sensor_data = 10;
-    ControlStatus control_status = 11;
-    AlertEvent alert = 12;
+    // 遙測資料事件。
+    // Telemetry data event.
+    TelemetryEvent telemetry = 10;
+
+    // 心跳事件。
+    // Heartbeat event.
+    HeartbeatEvent heartbeat = 11;
+
+    // 裝置狀態事件。
+    // Device state event.
+    DeviceStateEvent device_state = 12;
+
+    // 命令處理結果事件。
+    // Command result event.
+    CommandResultEvent command_result = 13;
+
+    // 警報事件。
+    // Alert event.
+    AlertEvent alert = 14;
   }
 }
 
-message SensorData {
-  float temperature = 1;
-  float humidity = 2;
-  float soil_moisture = 3;
-  float light_level = 4;
-  float water_level = 5;
-  float ph_value = 6;
+// 多筆感測資料集合，表示單次遙測上報。
+// Collection of sensor readings representing one telemetry emission.
+message TelemetryEvent {
+  // 本次遙測中包含的所有感測讀值。
+  // All sensor readings included in this telemetry emission.
+  repeated SensorReading readings = 1;
 }
 
-message ControlStatus {
-  string device = 1;
+// 單筆標準化感測讀值。
+// One normalized sensor reading.
+message SensorReading {
+  // 感測器類型。
+  // Type of sensor for this reading.
+  SensorType sensor_type = 1;
+
+  // 讀值數字。
+  // Numeric value of the reading.
+  float value = 2;
+
+  // 讀值單位。
+  // Unit of the reading value.
+  ValueUnit unit = 3;
+
+  // 邏輯通道，例如第幾路 sensor 或 zone。
+  // Logical channel such as a sensor lane or zone.
+  string channel = 4;
+
+  // 此讀值的健康狀態。
+  // Health status of this reading.
+  ReadingStatus status = 5;
+}
+
+// MCU 心跳與健康狀態。
+// MCU heartbeat and health information.
+message HeartbeatEvent {
+  // MCU 狀態代碼，沿用 firmware / bus 的原始語義。
+  // MCU status code preserving the firmware / bus semantics.
+  uint32 status = 1;
+
+  // MCU 當前供電電壓，單位為伏特。
+  // Current MCU supply voltage in volts.
+  float voltage = 2;
+
+  // MCU 已運行秒數。
+  // MCU uptime in seconds.
+  uint32 uptime_seconds = 3;
+}
+
+// MCU 上某個裝置的目前狀態。
+// Current state of a device hosted by the MCU.
+message DeviceStateEvent {
+  // 裝置種類。
+  // Type of device being reported.
+  DeviceType device_type = 1;
+
+  // 裝置是否處於啟用狀態。
+  // Whether the device is currently active.
   bool is_active = 2;
-  float power_level = 3;
+
+  // 裝置輸出等級或強度。
+  // Device output level or intensity.
+  float level = 3;
+
+  // 補充說明，例如切換原因或來源。
+  // Additional context such as reason or source.
   string reason = 4;
 }
 
+// 某個 command 的處理或執行結果。
+// Processing or execution result for a command.
+message CommandResultEvent {
+  // 對應的命令 ID。
+  // Related command id.
+  string command_id = 1;
+
+  // 命令結果狀態。
+  // Result status for the command.
+  CommandStatus status = 2;
+
+  // 結果說明文字。
+  // Human-readable explanation of the result.
+  string message = 3;
+
+  // 若命令鎖定某個裝置，則帶出其裝置類型。
+  // Device type when the command targets a specific device.
+  DeviceType device_type = 4;
+}
+
+// 警報、錯誤或異常通知。
+// Alert, error, or anomaly notification.
 message AlertEvent {
-  string severity = 1;
+  // 警報嚴重程度。
+  // Severity level of the alert.
+  AlertSeverity severity = 1;
+
+  // 穩定的警報代碼，便於程式判斷與查詢。
+  // Stable alert code for programmatic handling and lookup.
   string code = 2;
+
+  // 人類可讀的警報內容。
+  // Human-readable alert message.
   string message = 3;
 }
