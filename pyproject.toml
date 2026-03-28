@@ -1,0 +1,13 @@
+[project]
+name = "plant-care"
+version = "0.1.0"
+description = "Plant care system"
+requires-python = ">=3.14"
+
+[tool.uv.workspace]
+members = ["plant-core", "mcu-bus-daemon"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=9.0",
+]

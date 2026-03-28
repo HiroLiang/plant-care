@@ -1,12 +1,17 @@
+import logging
+import queue
 import threading
 
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from domain.mcu_bus import Subscriber, BusEvent
+from domain.mcu_bus import BusEvent
+from domain.subscription import Subscriber, Event
+
+logger = logging.getLogger(__name__)
 
 
-class BusHandler(ABC):
+class SubscriptionHandler(ABC):
     def __init__(self):
         self._lock = threading.RLock()
         self.subscribers: Dict[str, Subscriber] = {}
@@ -26,12 +31,20 @@ class BusHandler(ABC):
         with self._lock:
             return subscriber_id in self.subscribers
 
-    def take_event(self, subscriber_id: str) -> BusEvent:
+    def take_event(self, subscriber_id: str) -> Event:
+        """
+        Get an event from the subscriber.
+        Raises:
+            KeyError: Subscriber not found
+            RuntimeError: Subscriber is inactive or unsubscribed
+        :param subscriber_id: id of the subscriber
+        :return: BusEvent
+        """
         with self._lock:
             subscriber = self.subscribers.get(subscriber_id)
 
         if not subscriber:
-            raise KeyError(subscriber_id)
+            raise KeyError(f"Subscriber {subscriber_id} not found")
 
         return self._take_event_for(subscriber)
 
@@ -40,7 +53,10 @@ class BusHandler(ABC):
             subscribers = list(self.subscribers.values())
 
         for subscriber in subscribers:
-            subscriber.queue.put(event)
+            try:
+                subscriber.queue.put_nowait(event)
+            except queue.Full:
+                logger.warning("Subscriber %s queue full, dropping event", subscriber.id)
 
     # ---- hooks ----
     @abstractmethod

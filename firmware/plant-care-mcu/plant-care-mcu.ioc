@@ -2,9 +2,9 @@
 CAD.formats=
 CAD.pinconfig=
 CAD.provider=
-CAN1.CalculateBaudRate=875000
-CAN1.CalculateTimeBit=1142
-CAN1.CalculateTimeQuantum=380.95238095238096
+CAN1.CalculateBaudRate=500000
+CAN1.CalculateTimeBit=2000
+CAN1.CalculateTimeQuantum=142.85714285714286
 CAN1.IPParameters=CalculateTimeQuantum,CalculateTimeBit,CalculateBaudRate
 File.Version=6
 KeepUserPlacement=false

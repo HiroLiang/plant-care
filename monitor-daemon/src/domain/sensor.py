@@ -18,7 +18,7 @@ class SensorReading:
     Sensor reading info
     """
 
-    sensor_id: int
+    sensor_id: str
     sensor_type: SensorType
     value: float
     unit: str

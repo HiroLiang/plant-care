@@ -3,8 +3,9 @@ Description=MCU Bus Daemon
 After=network.target
 
 [Service]
+WorkingDirectory=/home/hiro/plant-care
 EnvironmentFile=/home/hiro/plant-care/mcu-bus-daemon/.env
-ExecStart=/usr/bin/python3 -m mcu_bus_daemon
+ExecStart=/usr/bin/env uv run --package mcu-bus-daemon mcu-bus-daemon --channel can0 --bitrate 500000
 Restart=always
 RestartSec=2
 

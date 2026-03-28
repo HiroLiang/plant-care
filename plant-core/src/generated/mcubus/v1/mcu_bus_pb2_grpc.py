@@ -3,8 +3,8 @@
 import grpc
 import warnings
 
-from generated.mcubus.v1 import events_pb2 as mcubus_dot_v1_dot_events__pb2
-from generated.mcubus.v1 import messages_pb2 as mcubus_dot_v1_dot_messages__pb2
+from mcubus.v1 import events_pb2 as mcubus_dot_v1_dot_events__pb2
+from mcubus.v1 import messages_pb2 as mcubus_dot_v1_dot_messages__pb2
 
 GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
@@ -12,7 +12,6 @@ _version_not_supported = False
 
 try:
     from grpc._utilities import first_version_is_lower
-
     _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
 except ImportError:
     _version_not_supported = True
@@ -37,20 +36,20 @@ class MCUBusServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Register = channel.unary_unary(
-            '/mcubus.v1.MCUBusService/Register',
-            request_serializer=mcubus_dot_v1_dot_messages__pb2.RegisterRequest.SerializeToString,
-            response_deserializer=mcubus_dot_v1_dot_messages__pb2.RegisterReply.FromString,
-            _registered_method=True)
+                '/mcubus.v1.MCUBusService/Register',
+                request_serializer=mcubus_dot_v1_dot_messages__pb2.RegisterRequest.SerializeToString,
+                response_deserializer=mcubus_dot_v1_dot_messages__pb2.RegisterReply.FromString,
+                _registered_method=True)
         self.UnRegister = channel.unary_unary(
-            '/mcubus.v1.MCUBusService/UnRegister',
-            request_serializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeRequest.SerializeToString,
-            response_deserializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeReplay.FromString,
-            _registered_method=True)
+                '/mcubus.v1.MCUBusService/UnRegister',
+                request_serializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeRequest.SerializeToString,
+                response_deserializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeReplay.FromString,
+                _registered_method=True)
         self.SubscribeEvents = channel.unary_stream(
-            '/mcubus.v1.MCUBusService/SubscribeEvents',
-            request_serializer=mcubus_dot_v1_dot_messages__pb2.SubscribeRequest.SerializeToString,
-            response_deserializer=mcubus_dot_v1_dot_events__pb2.BusEvent.FromString,
-            _registered_method=True)
+                '/mcubus.v1.MCUBusService/SubscribeEvents',
+                request_serializer=mcubus_dot_v1_dot_messages__pb2.SubscribeRequest.SerializeToString,
+                response_deserializer=mcubus_dot_v1_dot_events__pb2.BusEvent.FromString,
+                _registered_method=True)
 
 
 class MCUBusServiceServicer(object):
@@ -80,43 +79,43 @@ class MCUBusServiceServicer(object):
 
 def add_MCUBusServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-        'Register': grpc.unary_unary_rpc_method_handler(
-            servicer.Register,
-            request_deserializer=mcubus_dot_v1_dot_messages__pb2.RegisterRequest.FromString,
-            response_serializer=mcubus_dot_v1_dot_messages__pb2.RegisterReply.SerializeToString,
-        ),
-        'UnRegister': grpc.unary_unary_rpc_method_handler(
-            servicer.UnRegister,
-            request_deserializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeRequest.FromString,
-            response_serializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeReplay.SerializeToString,
-        ),
-        'SubscribeEvents': grpc.unary_stream_rpc_method_handler(
-            servicer.SubscribeEvents,
-            request_deserializer=mcubus_dot_v1_dot_messages__pb2.SubscribeRequest.FromString,
-            response_serializer=mcubus_dot_v1_dot_events__pb2.BusEvent.SerializeToString,
-        ),
+            'Register': grpc.unary_unary_rpc_method_handler(
+                    servicer.Register,
+                    request_deserializer=mcubus_dot_v1_dot_messages__pb2.RegisterRequest.FromString,
+                    response_serializer=mcubus_dot_v1_dot_messages__pb2.RegisterReply.SerializeToString,
+            ),
+            'UnRegister': grpc.unary_unary_rpc_method_handler(
+                    servicer.UnRegister,
+                    request_deserializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeRequest.FromString,
+                    response_serializer=mcubus_dot_v1_dot_messages__pb2.UnSubscribeReplay.SerializeToString,
+            ),
+            'SubscribeEvents': grpc.unary_stream_rpc_method_handler(
+                    servicer.SubscribeEvents,
+                    request_deserializer=mcubus_dot_v1_dot_messages__pb2.SubscribeRequest.FromString,
+                    response_serializer=mcubus_dot_v1_dot_events__pb2.BusEvent.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-        'mcubus.v1.MCUBusService', rpc_method_handlers)
+            'mcubus.v1.MCUBusService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
     server.add_registered_method_handlers('mcubus.v1.MCUBusService', rpc_method_handlers)
 
 
-# This class is part of an EXPERIMENTAL API.
+ # This class is part of an EXPERIMENTAL API.
 class MCUBusService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def Register(request,
-                 target,
-                 options=(),
-                 channel_credentials=None,
-                 call_credentials=None,
-                 insecure=False,
-                 compression=None,
-                 wait_for_ready=None,
-                 timeout=None,
-                 metadata=None):
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
         return grpc.experimental.unary_unary(
             request,
             target,
@@ -135,15 +134,15 @@ class MCUBusService(object):
 
     @staticmethod
     def UnRegister(request,
-                   target,
-                   options=(),
-                   channel_credentials=None,
-                   call_credentials=None,
-                   insecure=False,
-                   compression=None,
-                   wait_for_ready=None,
-                   timeout=None,
-                   metadata=None):
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
         return grpc.experimental.unary_unary(
             request,
             target,
@@ -162,15 +161,15 @@ class MCUBusService(object):
 
     @staticmethod
     def SubscribeEvents(request,
-                        target,
-                        options=(),
-                        channel_credentials=None,
-                        call_credentials=None,
-                        insecure=False,
-                        compression=None,
-                        wait_for_ready=None,
-                        timeout=None,
-                        metadata=None):
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
         return grpc.experimental.unary_stream(
             request,
             target,

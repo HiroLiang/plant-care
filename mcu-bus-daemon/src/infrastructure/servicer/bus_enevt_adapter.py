@@ -1,7 +1,7 @@
-from datetime import timezone
+from datetime import UTC, timezone
 from domain.mcu_bus import BusEvent, SensorDataEvent, ControlStatusEvent, AlertEvent
 from google.protobuf.timestamp_pb2 import Timestamp
-from generated.mcubus.v1 import events_pb2
+from mcubus.v1 import events_pb2
 
 
 def to_proto(event: BusEvent) -> events_pb2.BusEvent:
@@ -12,7 +12,12 @@ def to_proto(event: BusEvent) -> events_pb2.BusEvent:
 
     # timestamp
     ts = Timestamp()
-    ts.FromDatetime(event.timestamp.replace(tzinfo=timezone.utc))
+    event_timestamp = event.timestamp
+    if event_timestamp.tzinfo is None:
+        event_timestamp = event_timestamp.replace(tzinfo=UTC)
+    else:
+        event_timestamp = event_timestamp.astimezone(timezone.utc)
+    ts.FromDatetime(event_timestamp)
     proto.timestamp.CopyFrom(ts)
 
     # payload

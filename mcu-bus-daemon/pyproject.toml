@@ -1,0 +1,19 @@
+[project]
+name = "mcu-bus-daemon"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "plant-core",
+    "grpcio",
+    "python-can",
+    "python-json-logger",
+]
+
+[project.scripts]
+mcu-bus-daemon = "main:main_cli"
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+plant-core = { workspace = true }

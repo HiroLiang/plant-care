@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Union
 
@@ -7,10 +7,10 @@ from typing import Union
 class SensorDataEvent:
     temperature: float
     humidity: float
-    soil_moisture: float = 0.0
-    light_level: float = 0.0
-    water_level: float = 0.0
-    ph_value: float = 0.0
+    soil_moisture: float
+    light_level: float
+    water_level: float
+    ph_value: float
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ BusPayload = Union[
 
 
 @dataclass(frozen=True)
-class BusEvent:
+class MCUBusEvent:
     event_id: str
     module_id: str
     timestamp: datetime

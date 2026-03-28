@@ -25,7 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "sht31.h"
+#include "can_app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +58,11 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+  int __io_putchar(int ch)
+  {
+    HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+  }
 /* USER CODE END 0 */
 
 /**
@@ -93,13 +98,46 @@ int main(void)
   MX_CAN1_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
+//  if (CAN_App_Init(&hcan1) != HAL_OK) {
+//    Error_Handler();
+//  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t last_sensor_tick = 0;
+  uint32_t last_hb_tick = 0;
+  const uint32_t start_tick = HAL_GetTick();
+  uint8_t heartbeat_status = 0;
+
   while (1)
   {
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+    printf("Hello from STM32\r\n");
+    HAL_Delay(1000);
+
+//    uint32_t now = HAL_GetTick();
+
+    /* SHT31 poll every 2 s */
+//    if (now - last_sensor_tick >= 2000) {
+//      last_sensor_tick = now;
+//      SHT31_Data d;
+//      uint8_t err = (SHT31_Read(&hi2c1, &d) != HAL_OK);
+//      if (err) { d.temperature = 0; d.humidity = 0; d.status = 1; }
+//      heartbeat_status = d.status;
+//      if (CAN_Send_TempHum(&hcan1, d.temperature, d.humidity, d.status) != HAL_OK) {
+//        heartbeat_status = 1;
+//      }
+//    }
+
+    /* Heartbeat every 5 s */
+//    if (now - last_hb_tick >= 5000) {
+//      last_hb_tick = now;
+//      uint32_t uptime = (now - start_tick) / 1000;
+//      if (CAN_Send_Heartbeat(&hcan1, heartbeat_status, 3300, uptime) != HAL_OK) {
+//        heartbeat_status = 1;
+//      }
+//    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
