@@ -1,0 +1,1 @@
+"""MCU bus protocol package."""

@@ -1,0 +1,25 @@
+[project]
+name = "control-daemon"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi",
+    "grpcio",
+    "httpx",
+    "plant-core",
+    "python-dotenv",
+    "python-json-logger",
+    "uvicorn",
+]
+
+[tool.uv.sources]
+plant-core = { path = "../plant-core", editable = true }
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=9.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "../plant-core/src"]
+testpaths = ["tests"]
