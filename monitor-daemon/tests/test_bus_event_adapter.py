@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 
+import pytest
 from google.protobuf.timestamp_pb2 import Timestamp
-from mcubus.v1 import common_pb2, events_pb2
+from plant_core.generated.mcubus.v1 import common_pb2, events_pb2
 
 from infrastructure.mcu.bus_event_adapter import to_domain
 
@@ -57,3 +58,28 @@ def test_to_domain_alert_event():
     domain_event = to_domain(event)
 
     assert domain_event.payload.code == "heartbeat_status_79"
+    assert domain_event.payload.severity == "error"
+
+
+def test_to_domain_heartbeat_event_preserves_fields():
+    ts = Timestamp()
+    ts.FromDatetime(datetime(2026, 3, 18, tzinfo=timezone.utc))
+    event = events_pb2.BusEvent(
+        event_id="evt-3",
+        source_node_id=9,
+        emitted_at=ts,
+        event_type=common_pb2.EVENT_TYPE_HEARTBEAT,
+        heartbeat=events_pb2.HeartbeatEvent(
+            status=7,
+            voltage=12.4,
+            uptime_seconds=321,
+        ),
+    )
+
+    domain_event = to_domain(event)
+
+    assert domain_event.source_node_id == 9
+    assert domain_event.payload.status == 7
+    assert domain_event.payload.voltage == pytest.approx(12.4)
+    assert domain_event.payload.uptime_seconds == 321
+    assert domain_event.emitted_at == datetime(2026, 3, 18, tzinfo=timezone.utc)

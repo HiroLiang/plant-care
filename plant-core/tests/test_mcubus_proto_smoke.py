@@ -1,14 +1,4 @@
-import sys
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-GENERATED_ROOT = PROJECT_ROOT / "plant-core" / "src" / "generated"
-
-generated_root_str = str(GENERATED_ROOT)
-if generated_root_str not in sys.path:
-    sys.path.insert(0, generated_root_str)
-
-from mcubus.v1 import commands_pb2, common_pb2, events_pb2
+from plant_core.generated.mcubus.v1 import commands_pb2, common_pb2, events_pb2
 
 
 def test_actuator_command_round_trip():

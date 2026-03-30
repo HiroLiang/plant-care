@@ -52,6 +52,14 @@ class SubscriptionHandler(ABC):
         with self._lock:
             subscribers = list(self.subscribers.values())
 
+        logger.info(
+            "Publishing bus event %s (%s) from node %s to %d subscriber(s)",
+            event.event_id,
+            type(event.payload).__name__,
+            event.source_node_id,
+            len(subscribers),
+        )
+
         for subscriber in subscribers:
             try:
                 subscriber.queue.put_nowait(event)

@@ -1,5 +1,4 @@
 import logging
-import sys
 from threading import Event, Thread
 from typing import Optional, Callable, Iterator
 
@@ -8,14 +7,8 @@ import grpc
 from application.mcu_bus_client import MCUBusClient
 from domain.mcu_bus_event import MCUBusEvent
 from infrastructure.mcu.bus_event_adapter import to_domain
-from pathlib import Path
 
-GENERATED_ROOT = Path(__file__).resolve().parents[4] / "plant-core" / "src" / "generated"
-generated_root_str = str(GENERATED_ROOT)
-if generated_root_str not in sys.path:
-    sys.path.insert(0, generated_root_str)
-
-from mcubus.v1 import event_service_pb2_grpc, events_pb2
+from plant_core.generated.mcubus.v1 import event_service_pb2_grpc, events_pb2
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +79,7 @@ class GrpcMCUBusClient(MCUBusClient):
 
         try:
             event_stream: Iterator[events_pb2.BusEvent] = self._stub.SubscribeBusEvents(
-                events_pb2.SubscribeBusEventsRequest()
+                events_pb2.SubscribeBusEventsRequest(include_system_events=True)
             )
 
             logger.info("Started subscribing to bus events")

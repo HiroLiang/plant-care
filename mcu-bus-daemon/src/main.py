@@ -1,22 +1,15 @@
 import logging
-import sys
 
 import grpc
 
 from concurrent import futures
-from pathlib import Path
-
-GENERATED_ROOT = Path(__file__).resolve().parents[2] / "plant-core" / "src" / "generated"
-generated_root_str = str(GENERATED_ROOT)
-if generated_root_str not in sys.path:
-    sys.path.insert(0, generated_root_str)
 
 from infrastructure.bus.can_daemon import CanBusDaemon
 from infrastructure.bus.rpc_subscription_handler import RpcSubscriptionHandler
 from infrastructure.shared.logger import setup_logging
 
 from infrastructure.servicer.mcu_bus_servicer import MCUBusCommandServer, MCUBusEventServer
-from mcubus.v1 import command_service_pb2_grpc, event_service_pb2_grpc
+from plant_core.generated.mcubus.v1 import command_service_pb2_grpc, event_service_pb2_grpc
 
 
 def main(

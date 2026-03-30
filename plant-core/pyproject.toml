@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "plant-core"
 version = "0.1.0"
@@ -8,3 +12,13 @@ dependencies = [
     "grpcio-tools",
     "protobuf",
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["plant_core*"]
+
+[tool.setuptools.package-data]
+"plant_core.infrastructure.persistence.sqlite" = ["schema.sql"]

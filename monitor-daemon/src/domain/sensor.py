@@ -41,14 +41,3 @@ class Sensor(Protocol):
 
     def read(self) -> SensorReading:
         ...
-
-
-class SensorRepository(Protocol):
-    def save(self, reading: SensorReading) -> None:
-        ...
-
-    def save_batch(self, readings: list[SensorReading]) -> None:
-        ...
-
-    def get_latest(self, sensor_id: str) -> SensorReading | None:
-        ...

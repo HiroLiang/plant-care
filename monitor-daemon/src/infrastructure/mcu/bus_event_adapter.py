@@ -10,7 +10,7 @@ from domain.mcu_bus_event import (
     TelemetryEvent,
     TelemetryReading,
 )
-from mcubus.v1 import common_pb2, events_pb2
+from plant_core.generated.mcubus.v1 import common_pb2, events_pb2
 
 
 def to_domain(event: events_pb2.BusEvent) -> MCUBusEvent:

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from bootstrap.context import AppContext
@@ -6,7 +7,7 @@ from domain.mcu_bus_event import MCUBusEvent
 logger = logging.getLogger(__name__)
 
 
-def wire_mcu_bus_subscription(ctx: AppContext) -> None:
+def wire_mcu_bus_subscription(ctx: AppContext, loop: asyncio.AbstractEventLoop) -> None:
     if not ctx.clients or not ctx.services:
         return
 
@@ -14,7 +15,8 @@ def wire_mcu_bus_subscription(ctx: AppContext) -> None:
     service = ctx.services.monitor_service
 
     def on_event(event: MCUBusEvent) -> None:
-        service.ingest_mcu_event(event)
+        future = asyncio.run_coroutine_threadsafe(service.ingest_mcu_event(event), loop)
+        future.add_done_callback(_log_background_failure)
 
     def on_error(error: Exception) -> None:
         logger.warning("MCU bus subscription error: %s", error)
@@ -33,26 +35,39 @@ async def bootstrap() -> AppContext:
     setup_logging(logging.INFO, False)
 
     # Initialize database
-    db = await init_database()
+    database = await init_database()
 
     # Initialize clients
     clients = await init_clients()
 
     # Initialize services
-    services = await init_services(clients)
+    services = await init_services(database.repositories, clients)
+    await services.monitor_service.refresh_local_modules()
 
     ctx = AppContext(
-        db=db,
+        db=database.db,
+        repositories=database.repositories,
         clients=clients,
         services=services
     )
-    wire_mcu_bus_subscription(ctx)
+    loop = asyncio.get_running_loop()
+    services.start_polling(loop)
+    wire_mcu_bus_subscription(ctx, loop)
     return ctx
 
 
 async def shutdown(ctx: AppContext) -> None:
     from bootstrap.clients import shoutdown_clients
     from bootstrap.database import shout_database
+    from bootstrap.services import shutdown_services
 
-    await shout_database(ctx.db)
     await shoutdown_clients(ctx.clients)
+    await shutdown_services(ctx.services)
+    await shout_database(ctx.db)
+
+
+def _log_background_failure(future) -> None:
+    try:
+        future.result()
+    except Exception:
+        logger.exception("Background ingestion failed")

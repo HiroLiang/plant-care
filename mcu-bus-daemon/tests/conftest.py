@@ -5,9 +5,9 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
-GENERATED_ROOT = PROJECT_ROOT / "plant-core" / "src" / "generated"
+PLANT_CORE_SRC = PROJECT_ROOT / "plant-core" / "src"
 
-for path in (SRC_ROOT, GENERATED_ROOT):
+for path in (SRC_ROOT, PLANT_CORE_SRC):
     path_str = str(path)
     if path_str not in sys.path:
         sys.path.insert(0, path_str)

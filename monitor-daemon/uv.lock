@@ -209,6 +209,7 @@ name = "plant-core"
 version = "0.1.0"
 source = { editable = "../plant-core" }
 dependencies = [
+    { name = "aiosqlite" },
     { name = "grpcio" },
     { name = "grpcio-tools" },
     { name = "protobuf" },
@@ -216,6 +217,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiosqlite" },
     { name = "grpcio" },
     { name = "grpcio-tools" },
     { name = "protobuf" },

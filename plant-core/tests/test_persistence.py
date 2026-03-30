@@ -5,14 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from domain.command import CommandLog, CommandStatus, CommandType
-from domain.device import DeviceState, DeviceType
-from domain.event import EventLog, EventType
-from domain.node import Node, NodeKind, NodeStatus
-from domain.sensor import LatestSensorReading, Sensor, SensorReading, SensorStatus, SensorType
-from infrastructure.persistence.sqlite.datasource import SQLiteDatasource
-from infrastructure.persistence.sqlite.bundle import SQLiteRepositoryBundle
-from infrastructure.persistence.sqlite.mappers import (
+from plant_core.domain.command import CommandLog, CommandStatus, CommandType
+from plant_core.domain.device import DeviceState, DeviceType
+from plant_core.domain.event import EventLog, EventType
+from plant_core.domain.node import Node, NodeKind, NodeStatus
+from plant_core.domain.sensor import LatestSensorReading, Sensor, SensorReading, SensorStatus, SensorType
+from plant_core.infrastructure.persistence.sqlite.datasource import SQLiteDatasource
+from plant_core.infrastructure.persistence.sqlite.bundle import SQLiteRepositoryBundle
+from plant_core.infrastructure.persistence.sqlite.mappers import (
     command_log_to_record,
     event_log_to_record,
     latest_sensor_reading_to_record,
@@ -26,20 +26,20 @@ from infrastructure.persistence.sqlite.mappers import (
     sensor_reading_to_record,
     sensor_to_record,
 )
-from infrastructure.persistence.sqlite.repositories.sqlite_command_log_repository import (
+from plant_core.infrastructure.persistence.sqlite.repositories.sqlite_command_log_repository import (
     SQLiteCommandLogRepository,
 )
-from infrastructure.persistence.sqlite.repositories.sqlite_device_state_repository import (
+from plant_core.infrastructure.persistence.sqlite.repositories.sqlite_device_state_repository import (
     SQLiteDeviceStateRepository,
 )
-from infrastructure.persistence.sqlite.repositories.sqlite_event_log_repository import (
+from plant_core.infrastructure.persistence.sqlite.repositories.sqlite_event_log_repository import (
     SQLiteEventLogRepository,
 )
-from infrastructure.persistence.sqlite.repositories.sqlite_node_repository import SQLiteNodeRepository
-from infrastructure.persistence.sqlite.repositories.sqlite_sensor_reading_repository import (
+from plant_core.infrastructure.persistence.sqlite.repositories.sqlite_node_repository import SQLiteNodeRepository
+from plant_core.infrastructure.persistence.sqlite.repositories.sqlite_sensor_reading_repository import (
     SQLiteSensorReadingRepository,
 )
-from infrastructure.persistence.sqlite.repositories.sqlite_sensor_repository import SQLiteSensorRepository
+from plant_core.infrastructure.persistence.sqlite.repositories.sqlite_sensor_repository import SQLiteSensorRepository
 
 
 def utc(value: str) -> datetime:

@@ -2,10 +2,10 @@ from datetime import datetime, timezone
 
 import pytest
 
-from domain.mcu_bus import BusEvent, TelemetryEvent, TelemetryReading
+from domain.mcu_bus import AlertEvent, BusEvent, TelemetryEvent, TelemetryReading
 from infrastructure.servicer.mcu_bus_servicer import MCUBusCommandServer, MCUBusEventServer
 from fake.fake_bus_handler import FakeSubscriptionHandler
-from mcubus.v1 import commands_pb2, common_pb2, events_pb2
+from plant_core.generated.mcubus.v1 import commands_pb2, common_pb2, events_pb2
 
 
 class PreloadedSubscriptionHandler(FakeSubscriptionHandler):
@@ -75,6 +75,53 @@ def test_subscribe_bus_events_applies_filters():
 
     with pytest.raises(StopIteration):
         next(stream)
+
+
+def test_subscribe_bus_events_excludes_system_events_by_default():
+    event = BusEvent(
+        event_id="1-124",
+        source_node_id=1,
+        emitted_at=datetime.now(timezone.utc),
+        payload=AlertEvent(
+            severity="error",
+            code="heartbeat_status_79",
+            message="boom",
+        ),
+    )
+    handler = PreloadedSubscriptionHandler(event)
+    server = MCUBusEventServer(handler)
+    ctx = FakeContext()
+
+    stream = server.SubscribeBusEvents(events_pb2.SubscribeBusEventsRequest(), ctx)
+
+    with pytest.raises(StopIteration):
+        next(stream)
+
+
+def test_subscribe_bus_events_includes_system_events_when_requested():
+    event = BusEvent(
+        event_id="1-125",
+        source_node_id=1,
+        emitted_at=datetime.now(timezone.utc),
+        payload=AlertEvent(
+            severity="warning",
+            code="node_hot",
+            message="hot",
+        ),
+    )
+    handler = PreloadedSubscriptionHandler(event)
+    server = MCUBusEventServer(handler)
+    ctx = FakeContext()
+
+    proto_event = next(
+        server.SubscribeBusEvents(
+            events_pb2.SubscribeBusEventsRequest(include_system_events=True),
+            ctx,
+        )
+    )
+
+    assert proto_event.event_type == common_pb2.EVENT_TYPE_ALERT
+    assert proto_event.alert.code == "node_hot"
 
 
 def test_dispatch_command_returns_structured_reply():

@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 #include "sht31.h"
 #include "can_app.h"
 /* USER CODE END Includes */
@@ -53,6 +54,17 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+static void PrintBootBanner(HAL_StatusTypeDef recovery_status,
+                            HAL_StatusTypeDef probe_44,
+                            HAL_StatusTypeDef probe_45);
+static void PrintI2cSnapshot(const char *tag);
+static void PrintSht31Reading(const SHT31_Data *data);
+static void PrintSht31Error(HAL_StatusTypeDef hal_status, uint8_t sensor_status);
+static const char *Sht31StatusToString(uint8_t status);
+static const char *HalStatusToString(HAL_StatusTypeDef status);
+static const char *I2cStateToString(HAL_I2C_StateTypeDef state);
+static const char *PinStateToString(GPIO_PinState state);
+static long ToCentiUnits(float value);
 
 /* USER CODE END PFP */
 
@@ -95,9 +107,24 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  GPIO_PinState pre_recover_scl = GPIO_PIN_RESET;
+  GPIO_PinState pre_recover_sda = GPIO_PIN_RESET;
+  HAL_StatusTypeDef recovery_status;
+  HAL_StatusTypeDef probe_44;
+  HAL_StatusTypeDef probe_45;
+
+  I2C1_GetBusLevels(&pre_recover_scl, &pre_recover_sda);
+  recovery_status = I2C1_AttemptBusRecovery();
   MX_CAN1_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  probe_44 = HAL_I2C_IsDeviceReady(&hi2c1, (0x44U << 1), 2U, 50U);
+  probe_45 = HAL_I2C_IsDeviceReady(&hi2c1, (0x45U << 1), 2U, 50U);
+  printf("\r\npre-recover bus scl=%s sda=%s\r\n",
+         PinStateToString(pre_recover_scl),
+         PinStateToString(pre_recover_sda));
+  PrintBootBanner(recovery_status, probe_44, probe_45);
+  PrintI2cSnapshot("boot");
 //  if (CAN_App_Init(&hcan1) != HAL_OK) {
 //    Error_Handler();
 //  }
@@ -112,32 +139,30 @@ int main(void)
 
   while (1)
   {
-    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-    printf("Hello from STM32\r\n");
-    HAL_Delay(1000);
-
-//    uint32_t now = HAL_GetTick();
+    uint32_t now = HAL_GetTick();
 
     /* SHT31 poll every 2 s */
-//    if (now - last_sensor_tick >= 2000) {
-//      last_sensor_tick = now;
-//      SHT31_Data d;
-//      uint8_t err = (SHT31_Read(&hi2c1, &d) != HAL_OK);
-//      if (err) { d.temperature = 0; d.humidity = 0; d.status = 1; }
-//      heartbeat_status = d.status;
-//      if (CAN_Send_TempHum(&hcan1, d.temperature, d.humidity, d.status) != HAL_OK) {
-//        heartbeat_status = 1;
-//      }
-//    }
+    if ((now - last_sensor_tick) >= 2000U) {
+      SHT31_Data data = {0};
+      HAL_StatusTypeDef sensor_ret;
 
-    /* Heartbeat every 5 s */
-//    if (now - last_hb_tick >= 5000) {
-//      last_hb_tick = now;
-//      uint32_t uptime = (now - start_tick) / 1000;
-//      if (CAN_Send_Heartbeat(&hcan1, heartbeat_status, 3300, uptime) != HAL_OK) {
-//        heartbeat_status = 1;
-//      }
-//    }
+      last_sensor_tick = now;
+      HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+
+      sensor_ret = SHT31_Read(&hi2c1, &data);
+      heartbeat_status = data.status;
+
+      if (sensor_ret == HAL_OK) {
+        PrintSht31Reading(&data);
+      } else {
+        PrintSht31Error(sensor_ret, data.status);
+      }
+    }
+
+    /* Heartbeat/CAN bring-up is intentionally disabled for sensor-only debug. */
+    (void)last_hb_tick;
+    (void)start_tick;
+    HAL_Delay(50);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -193,6 +218,132 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void PrintBootBanner(HAL_StatusTypeDef recovery_status,
+                            HAL_StatusTypeDef probe_44,
+                            HAL_StatusTypeDef probe_45)
+{
+  printf("\r\n=== plant-care-mcu boot ===\r\n");
+  printf("uart=USART2@115200 i2c=I2C1(PB6/PB7) addr_default=0x44 recover=%s probe44=%s probe45=%s\r\n",
+         HalStatusToString(recovery_status),
+         HalStatusToString(probe_44),
+         HalStatusToString(probe_45));
+}
+
+static void PrintI2cSnapshot(const char *tag)
+{
+  GPIO_PinState scl = GPIO_PIN_RESET;
+  GPIO_PinState sda = GPIO_PIN_RESET;
+
+  I2C1_GetBusLevels(&scl, &sda);
+
+  printf("i2c %s scl=%s sda=%s state=%s(0x%02X) err=0x%08lX\r\n",
+         tag,
+         PinStateToString(scl),
+         PinStateToString(sda),
+         I2cStateToString(HAL_I2C_GetState(&hi2c1)),
+         (unsigned int)HAL_I2C_GetState(&hi2c1),
+         HAL_I2C_GetError(&hi2c1));
+}
+
+static void PrintSht31Reading(const SHT31_Data *data)
+{
+  long temp_centi = ToCentiUnits(data->temperature);
+  long hum_centi = ToCentiUnits(data->humidity);
+  long temp_abs = (temp_centi < 0) ? -temp_centi : temp_centi;
+
+  printf("sht31 ok temp=%ld.%02ldC hum=%ld.%02ld%% status=%s\r\n",
+         temp_centi / 100L,
+         temp_abs % 100L,
+         hum_centi / 100L,
+         hum_centi % 100L,
+         Sht31StatusToString(data->status));
+}
+
+static void PrintSht31Error(HAL_StatusTypeDef hal_status, uint8_t sensor_status)
+{
+  printf("sht31 err hal=%d status=%s\r\n",
+         (int)hal_status,
+         Sht31StatusToString(sensor_status));
+  PrintI2cSnapshot("error");
+}
+
+static const char *Sht31StatusToString(uint8_t status)
+{
+  switch (status) {
+    case SHT31_STATUS_OK:
+      return "ok";
+    case SHT31_STATUS_I2C_TX_ERROR:
+      return "i2c_tx";
+    case SHT31_STATUS_I2C_RX_ERROR:
+      return "i2c_rx";
+    case SHT31_STATUS_CRC_ERROR:
+      return "crc";
+    case SHT31_STATUS_NOT_READY:
+      return "not_ready";
+    default:
+      return "unknown";
+  }
+}
+
+static const char *HalStatusToString(HAL_StatusTypeDef status)
+{
+  switch (status) {
+    case HAL_OK:
+      return "ok";
+    case HAL_ERROR:
+      return "error";
+    case HAL_BUSY:
+      return "busy";
+    case HAL_TIMEOUT:
+      return "timeout";
+    default:
+      return "unknown";
+  }
+}
+
+static const char *I2cStateToString(HAL_I2C_StateTypeDef state)
+{
+  switch (state) {
+    case HAL_I2C_STATE_RESET:
+      return "reset";
+    case HAL_I2C_STATE_READY:
+      return "ready";
+    case HAL_I2C_STATE_BUSY:
+      return "busy";
+    case HAL_I2C_STATE_BUSY_TX:
+      return "busy_tx";
+    case HAL_I2C_STATE_BUSY_RX:
+      return "busy_rx";
+    case HAL_I2C_STATE_LISTEN:
+      return "listen";
+    case HAL_I2C_STATE_BUSY_TX_LISTEN:
+      return "busy_tx_listen";
+    case HAL_I2C_STATE_BUSY_RX_LISTEN:
+      return "busy_rx_listen";
+    case HAL_I2C_STATE_ABORT:
+      return "abort";
+    case HAL_I2C_STATE_TIMEOUT:
+      return "timeout";
+    case HAL_I2C_STATE_ERROR:
+      return "error";
+    default:
+      return "unknown";
+  }
+}
+
+static const char *PinStateToString(GPIO_PinState state)
+{
+  return (state == GPIO_PIN_SET) ? "high" : "low";
+}
+
+static long ToCentiUnits(float value)
+{
+  if (value >= 0.0f) {
+    return (long)(value * 100.0f + 0.5f);
+  }
+
+  return (long)(value * 100.0f - 0.5f);
+}
 
 /* USER CODE END 4 */
 

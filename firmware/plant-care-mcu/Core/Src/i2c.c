@@ -21,6 +21,86 @@
 #include "i2c.h"
 
 /* USER CODE BEGIN 0 */
+#define I2C1_SCL_GPIO_Port GPIOB
+#define I2C1_SCL_Pin GPIO_PIN_6
+#define I2C1_SDA_GPIO_Port GPIOB
+#define I2C1_SDA_Pin GPIO_PIN_7
+
+void I2C1_GetBusLevels(GPIO_PinState *scl, GPIO_PinState *sda)
+{
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  if (scl != NULL) {
+    *scl = HAL_GPIO_ReadPin(I2C1_SCL_GPIO_Port, I2C1_SCL_Pin);
+  }
+
+  if (sda != NULL) {
+    *sda = HAL_GPIO_ReadPin(I2C1_SDA_GPIO_Port, I2C1_SDA_Pin);
+  }
+}
+
+HAL_StatusTypeDef I2C1_AttemptBusRecovery(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  HAL_GPIO_DeInit(GPIOB, I2C1_SCL_Pin | I2C1_SDA_Pin);
+
+  GPIO_InitStruct.Pin = I2C1_SDA_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(I2C1_SDA_GPIO_Port, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = I2C1_SCL_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(I2C1_SCL_GPIO_Port, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(I2C1_SCL_GPIO_Port, I2C1_SCL_Pin, GPIO_PIN_SET);
+  HAL_Delay(1);
+
+  for (uint8_t pulse = 0; pulse < 9U; ++pulse) {
+    if (HAL_GPIO_ReadPin(I2C1_SDA_GPIO_Port, I2C1_SDA_Pin) == GPIO_PIN_SET) {
+      break;
+    }
+
+    HAL_GPIO_WritePin(I2C1_SCL_GPIO_Port, I2C1_SCL_Pin, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(I2C1_SCL_GPIO_Port, I2C1_SCL_Pin, GPIO_PIN_SET);
+    HAL_Delay(1);
+  }
+
+  if (HAL_GPIO_ReadPin(I2C1_SDA_GPIO_Port, I2C1_SDA_Pin) == GPIO_PIN_RESET) {
+    GPIO_InitStruct.Pin = I2C1_SDA_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(I2C1_SDA_GPIO_Port, &GPIO_InitStruct);
+
+    HAL_GPIO_WritePin(I2C1_SDA_GPIO_Port, I2C1_SDA_Pin, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(I2C1_SCL_GPIO_Port, I2C1_SCL_Pin, GPIO_PIN_SET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(I2C1_SDA_GPIO_Port, I2C1_SDA_Pin, GPIO_PIN_SET);
+    HAL_Delay(1);
+
+    GPIO_InitStruct.Pin = I2C1_SDA_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(I2C1_SDA_GPIO_Port, &GPIO_InitStruct);
+  }
+
+  if ((HAL_GPIO_ReadPin(I2C1_SCL_GPIO_Port, I2C1_SCL_Pin) == GPIO_PIN_SET) &&
+      (HAL_GPIO_ReadPin(I2C1_SDA_GPIO_Port, I2C1_SDA_Pin) == GPIO_PIN_SET)) {
+    return HAL_OK;
+  }
+
+  return HAL_BUSY;
+}
 
 /* USER CODE END 0 */
 

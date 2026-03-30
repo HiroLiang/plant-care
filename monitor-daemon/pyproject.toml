@@ -17,5 +17,5 @@ dependencies = [
 plant-core = { path = "../plant-core", editable = true }
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "../plant-core/src", "../plant-core/src/generated"]
+pythonpath = ["src", "../plant-core/src"]
 testpaths = ["tests"]

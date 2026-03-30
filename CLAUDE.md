@@ -36,16 +36,19 @@ cd mcu-bus-daemon && PYTHONPATH=src python src/main.py --port 50051
 cd monitor-daemon && python src/main.py
 # or
 cd monitor-daemon && make dev
+
+# control-daemon (FastAPI/uvicorn, port 8000)
+cd control-daemon && python src/main.py
 ```
 
 ### Regenerating Protobuf Stubs
 
-Protos live in `plant-core/proto/mcubus/v1/`. Generated stubs are in `plant-core/src/generated/mcubus/v1/`. Regenerate with:
+Protos live in `plant-core/proto/mcubus/v1/`. Generated stubs are in `plant-core/src/plant_core/generated/mcubus/v1/`. Regenerate with:
 
 ```bash
 python -m grpc_tools.protoc -I plant-core/proto \
-  --python_out=plant-core/src/generated \
-  --grpc_python_out=plant-core/src/generated \
+  --python_out=plant-core/src/plant_core/generated \
+  --grpc_python_out=plant-core/src/plant_core/generated \
   plant-core/proto/mcubus/v1/*.proto
 ```
 
@@ -69,10 +72,10 @@ ui-web          (React/Vite)
 
 | Package | Role |
 |---|---|
-| `plant-core` | Shared protobuf-generated stubs + domain models for MCU/bus |
+| `plant-core` | Shared protobuf stubs, domain models, SQLite infrastructure (`plant_core` namespace) |
 | `mcu-bus-daemon` | gRPC server; owns CAN bus I/O and fan-out to subscribers |
 | `monitor-daemon` | FastAPI HTTP server; aggregates sensor readings, talks to mcu-bus-daemon |
-| `control-daemon` | Command/control service (minimal, HTTP :8000) |
+| `control-daemon` | FastAPI HTTP server; forwards commands from monitor-daemon to mcu-bus-daemon via gRPC |
 | `ui-web` | React + TypeScript frontend |
 | `firmware/` | STM32 C firmware (STM32CubeIDE) |
 
@@ -102,9 +105,16 @@ bootstrap/       # Wiring: builds AppContext, injects dependencies
 - `McuBusClient` (application layer): subscribes to mcu-bus-daemon, translates gRPC events to domain `SensorReading`s
 - `AppContext` (bootstrap): holds db, clients, services; initialized in FastAPI lifespan
 
+**control-daemon**
+- Minimal FastAPI service (HTTP :8000); receives commands from `monitor-daemon` and forwards them over gRPC to `mcu-bus-daemon`
+- `AppContext` (bootstrap): holds clients and services; no database
+
 **plant-core**
-- Proto definitions: `mcu_bus.proto` (service), `messages.proto` (RPCs), `events.proto` (payloads)
-- `MCUBusService` gRPC: `Register`, `UnRegister`, `SubscribeEvents` (server-streaming)
+- Python package name is `plant_core` (import as `from plant_core.generated.mcubus.v1 import ...`)
+- Proto definitions: `common.proto`, `events.proto`, `event_service.proto`, `commands.proto`, `command_service.proto`
+- `EventService` gRPC: `Register`, `UnRegister`, `SubscribeEvents` (server-streaming); `CommandService` gRPC: sends commands to MCU
+- Shared SQLite infrastructure: `plant_core.infrastructure.persistence.sqlite` — `DataSource`, repositories, schema, and mappers used by both `monitor-daemon` and `control-daemon`
+- Shared domain models in `plant_core.domain`: `Sensor`, `Device`, `Node`, `Command`, `Event`; ports/interfaces in `plant_core.ports`
 
 ### Environment Variables (monitor-daemon)
 
@@ -121,5 +131,7 @@ bootstrap/       # Wiring: builds AppContext, injects dependencies
 ### Testing Patterns
 
 - `mcu-bus-daemon` tests use `FakeSubscriptionHandler` (in `tests/fake/`) to avoid real CAN bus
-- `monitor-daemon` has `conftest.py` fixtures for sensor mocks
-- `PYTHONPATH=src` is set via `pytest.ini_options` in monitor-daemon's `pyproject.toml`; mcu-bus-daemon requires it set manually
+- `monitor-daemon` uses `FakeEventStub` to mock gRPC streaming without a real server
+- Each package has a `test_import_smoke.py` that verifies top-level imports work (catches missing deps early)
+- `PYTHONPATH=src` is set via `pytest.ini_options` in `monitor-daemon`'s `pyproject.toml`; `mcu-bus-daemon` requires it set manually
+- Tests that import from `plant-core` add `plant-core/src` to `sys.path` via `conftest.py` (not via the workspace install) — keep this pattern when adding new cross-package tests

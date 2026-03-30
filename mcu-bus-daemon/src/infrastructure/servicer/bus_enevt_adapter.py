@@ -10,7 +10,7 @@ from domain.mcu_bus import (
     HeartbeatEvent,
     TelemetryEvent,
 )
-from mcubus.v1 import common_pb2, events_pb2
+from plant_core.generated.mcubus.v1 import common_pb2, events_pb2
 
 
 def to_proto(event: BusEvent) -> events_pb2.BusEvent:
